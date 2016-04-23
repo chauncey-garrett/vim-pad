@@ -7,7 +7,7 @@ import re
 from glob import glob
 from os import walk
 from os.path import join, getmtime, isfile, isdir, exists
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, check_output
 from vim_pad.utils import get_save_dir
 from vim_pad.pad import PadInfo
 from vim_pad.timestamps import natural_timestamp
@@ -113,11 +113,18 @@ def listdir_recursive_nohidden(path, archive):  # {{{1
         matches += [join(root, f) for f in filenames if not f.startswith('.')]
     return matches
 
+using_gnu_grep = False
+
 def listdir_external(path, archive, query): # {{{1
+    global using_gnu_grep
     search_backend = vim.eval("g:pad#search_backend")
     if search_backend == "grep":
-        # we use Perl mode for grep (-P), because it is really fast
-        command = ["grep", "-P", "-n", "-r", "-l", query, path + "/"]
+        # we use Perl mode for grep (-P) if available, because it is really fast
+        if using_gnu_grep or re.search('GNU grep', check_output(['grep', '--version'])):
+            command = ["grep", "-P", "-n", "-r", "-l", query, path + "/"]
+            using_gnu_grep = True
+        else:
+            command = ["grep", "-n", "-r", "-l", query, path + "/"]
         if archive != "!":
             command.append("--exclude-dir=archive")
         command.append('--exclude=.*')
