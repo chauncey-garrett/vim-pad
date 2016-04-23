@@ -120,7 +120,7 @@ def listdir_external(path, archive, query): # {{{1
     search_backend = vim.eval("g:pad#search_backend")
     if search_backend == "grep":
         # we use Perl mode for grep (-P) if available, because it is really fast
-        if using_gnu_grep or re.search('GNU grep', check_output(['grep', '--version'])):
+        if using_gnu_grep or re.search('GNU grep', str(check_output(['grep', '--version']))):
             command = ["grep", "-P", "-n", "-r", "-l", query, path + "/"]
             using_gnu_grep = True
         else:
